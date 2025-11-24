@@ -44,6 +44,20 @@ class MutantServiceTest {
     }
 
     @Test
+    @DisplayName("Debe analizar ADN humano y guardarlo si no existe")
+    void testAnalyzeHumanDnaAndSave() {
+        String[] dna = {"ATGC", "GTAG", "CATA", "TCGA"}; // Ejemplo humano
+
+        when(dnaRecordRepository.findByDnaHash(anyString())).thenReturn(Optional.empty());
+        when(mutantDetector.isMutant(dna)).thenReturn(false); // Aquí cambia a FALSE
+
+        boolean result = mutantService.analyzeDna(dna);
+
+        assertFalse(result); // Debe ser falso
+        verify(dnaRecordRepository, times(1)).save(any(DnaRecord.class));
+    }
+
+    @Test
     @DisplayName("Debe retornar resultado cacheado si ya existe en BD")
     void testReturnCachedResult() {
         String[] dna = {"ATGCGA", "CAGTGC", "TTATGT", "AGAAGG", "CCCCTA", "TCACTG"};
@@ -64,5 +78,11 @@ class MutantServiceTest {
     @DisplayName("Debe lanzar InvalidDnaException si el ADN es nulo (Defensive Programming)")
     void testShouldThrowExceptionWhenDnaIsNull() {
         assertThrows(InvalidDnaException.class, () -> mutantService.analyzeDna(null));
+    }
+
+    @Test
+    @DisplayName("Debe lanzar InvalidDnaException si el ADN es vacío")
+    void testShouldThrowExceptionWhenDnaIsEmpty() {
+        assertThrows(InvalidDnaException.class, () -> mutantService.analyzeDna(new String[]{}));
     }
 }

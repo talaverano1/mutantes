@@ -22,8 +22,8 @@ class StatsServiceTest {
     private StatsService statsService;
 
     @Test
-    @DisplayName("Debe calcular estadísticas correctamente")
-    void testGetStats() {
+    @DisplayName("Debe calcular estadísticas correctamente (Ratio 0.4)")
+    void testGetStatsNormalRatio() {
         when(repository.countByIsMutant(true)).thenReturn(40L);
         when(repository.countByIsMutant(false)).thenReturn(100L);
 
@@ -35,7 +35,7 @@ class StatsServiceTest {
     }
 
     @Test
-    @DisplayName("Debe manejar división por cero (sin humanos)")
+    @DisplayName("Debe manejar división por cero (0 humanos) y retornar 0.0")
     void testGetStatsNoHumans() {
         when(repository.countByIsMutant(true)).thenReturn(10L);
         when(repository.countByIsMutant(false)).thenReturn(0L);
@@ -44,8 +44,32 @@ class StatsServiceTest {
 
         assertEquals(10, response.getCountMutantDna());
         assertEquals(0, response.getCountHumanDna());
-        // Dependiendo de tu lógica en StatsService, esto podría ser 10.0 o 0.0
-        // Ajusta según tu implementación
-        assertTrue(response.getRatio() >= 0);
+        assertEquals(0.0, response.getRatio()); // Aserción corregida para validar 0.0
+    }
+
+    @Test
+    @DisplayName("Debe retornar 0.0 si no hay mutantes ni humanos (sin datos)")
+    void testGetStatsNoData() {
+        when(repository.countByIsMutant(true)).thenReturn(0L);
+        when(repository.countByIsMutant(false)).thenReturn(0L);
+
+        StatsResponse response = statsService.getStats();
+
+        assertEquals(0, response.getCountMutantDna());
+        assertEquals(0, response.getCountHumanDna());
+        assertEquals(0.0, response.getRatio());
+    }
+
+    @Test
+    @DisplayName("Debe retornar ratio 1.0 si las cantidades son iguales")
+    void testGetStatsEqualCounts() {
+        when(repository.countByIsMutant(true)).thenReturn(50L);
+        when(repository.countByIsMutant(false)).thenReturn(50L);
+
+        StatsResponse response = statsService.getStats();
+
+        assertEquals(50, response.getCountMutantDna());
+        assertEquals(50, response.getCountHumanDna());
+        assertEquals(1.0, response.getRatio());
     }
 }
