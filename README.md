@@ -70,6 +70,8 @@ Esto levanta el servidor Tomcat embebido y la API REST en el puerto 8080.
 | **H2 Console** | `http://localhost:8080/h2-console` | Acceso a la base de datos de persistencia (JDBC URL: `jdbc:h2:mem:testdb`). |
 
 ---
+### Paso 5: Acceder a las Herramientas en render
+URL Base: https://mutantes-hqdl.onrender.com
 
 ## 🌐 API Endpoints
 
