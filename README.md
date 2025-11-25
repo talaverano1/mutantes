@@ -41,3 +41,24 @@ La aplicación utiliza **Spring Boot 3** y **Gradle**. La base de datos H2 se in
 ```bash
 git clone [https://github.com/talaverano1/mutantes](https://github.com/talaverano1/mutantes)
 cd mutantes
+
+### Paso 2: Compilar, Testear e Instalar
+Ejecuta el siguiente comando para compilar el proyecto, ejecutar toda la suite de tests y generar los artefactos:
+
+Bash
+
+# Ejecutar tests y compilar
+./gradlew clean build
+
+### Paso 3: Iniciar la Aplicación
+Esto levanta el servidor Tomcat embebido y la API REST en el puerto 8080.
+
+Bash
+
+./gradlew bootRun
+
+Verificación: La API estará corriendo en http://localhost:8080.
+
+Herramienta,URL,Propósito
+Swagger UI,http://localhost:8080/swagger-ui.html,Documentación interactiva de la API (esencial para la evaluación automática).
+H2 Console,http://localhost:8080/h2-console,Acceso a la base de datos de persistencia (JDBC URL: jdbc:h2:mem:testdb).
