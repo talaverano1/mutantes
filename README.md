@@ -160,50 +160,70 @@ El siguiente diagrama ilustra el flujo lógico para la detección de mutantes, i
 
 ```plantuml
 @startuml
-actor Client
-participant "MutantController" as Controller
-participant "MutantService" as Service
-participant "DnaRecordRepository" as Repository
-participant "MutantDetector" as Detector
-database "H2 Database" as DB
+skinparam style strict
 
-Client -> Controller: POST /mutant {dna}
+title Diagrama de Secuencia: Detección de Mutante (POST /mutant)
+autonumber
+
+actor Client as C
+
+participant MutantController as Controller
+participant MutantService as Service
+participant DnaRecordRepository as Repository
+participant MutantDetector as Detector
+database H2Database as DB
+
+C -> Controller: POST /mutant/ {dna: [...]}
+
 activate Controller
-
 Controller -> Service: analyzeDna(dna)
+
 activate Service
 
-Service -> Service: calculateHash(dna)
-Service -> Repository: findByDnaHash(hash)
-activate Repository
-Repository -> DB: Select by Hash
-DB --> Repository: Result (Optional)
-deactivate Repository
-
-alt Registro Existe (Cache Hit)
-    Service --> Controller: isMutant (from DB)
-else Registro No Existe
-    Service -> Detector: isMutant(dna)
-    activate Detector
-    Detector --> Service: true/false
-    deactivate Detector
+    == 1. Búsqueda en Caché (Deduplicación) ==
+    Service -> Service: calculateHash(dna)
     
-    Service -> Repository: save(DnaRecord)
+    Service -> Repository: findByDnaHash(hash)
     activate Repository
-    Repository -> DB: Insert
-    deactivate Repository
+    Repository -> DB: SELECT * WHERE dna_hash = ?
     
-    Service --> Controller: result
-end
+    alt Registro Existente (Cache Hit)
+        DB --> Repository: DnaRecord (isMutant)
+        Repository --> Service: Optional<DnaRecord>
+        Service -> Service: isMutant = record.isMutant()
+        Service --> Controller: isMutant (Resultado cacheado)
+        
+    else Registro No Existente (Cache Miss)
+        DB --> Repository: Optional.empty()
+        Repository --> Service: Optional.empty()
 
+        == 2. Ejecución del Algoritmo ==
+        Service -> Detector: isMutant(dna)
+        activate Detector
+        
+        Detector -> Detector: Ejecutar algoritmo de búsqueda (O(N²) con Early Termination)
+        Detector --> Service: isMutant (true/false)
+        deactivate Detector
+
+        == 3. Persistencia ==
+        Service -> Repository: save(DnaRecord)
+        activate Repository
+        Repository -> DB: INSERT INTO dna_records (hash, is_mutant)
+        DB --> Repository: Registro guardado
+        deactivate Repository
+        
+        Service --> Controller: isMutant (Resultado del algoritmo)
+    end
+    
 deactivate Service
 
-alt isMutant == true
-    Controller --> Client: 200 OK
-else isMutant == false
-    Controller --> Client: 403 Forbidden
+Controller -> Controller: Evaluar resultado (true -> 200, false -> 403)
+alt Si es Mutante (true)
+    Controller --> C: HTTP 200 OK (Content-Length: 0)
+else Si es Humano (false)
+    Controller --> C: HTTP 403 Forbidden (Content-Length: 0)
 end
-
 deactivate Controller
+
 @enduml
 ```
