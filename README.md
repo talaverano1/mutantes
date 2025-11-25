@@ -72,6 +72,8 @@ Esto levanta el servidor Tomcat embebido y la API REST en el puerto 8080.
 ---
 ### Paso 5: Acceder a las Herramientas en render
 URL Base: https://mutantes-hqdl.onrender.com
+Swagger UI: https://mutantes-hqdl.onrender.com/swagger-ui/index.html
+
 
 ## 🌐 API Endpoints
 
